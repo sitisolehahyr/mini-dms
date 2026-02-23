@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*.sqlite3
+.venv/
+.pytest_cache/
+
+# Node
+node_modules/
+dist/
+
+# Env
+.env
+
+# OS
+.DS_Store
+
+# Storage
+backend/storage/documents/*
+backend/storage/pending/*
+!backend/storage/documents/.gitkeep
+!backend/storage/pending/.gitkeep
