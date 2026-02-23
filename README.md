@@ -1,153 +1,229 @@
 # Mini Document Management System (DMS)
 
-Fullstack take-home app built locally with:
-- Backend: FastAPI + SQLAlchemy + Alembic + PostgreSQL + JWT
-- Frontend: React + Vite + TypeScript
-- File storage: local disk (`backend/storage`)
+A fullstack enterprise-style Document Management System built as part of a Software Engineer (Mid-Level) technical assessment.
 
-## 1) Project Structure
+This system simulates a real-world document workflow including authentication, role-based access control, document versioning, approval workflow, and notification handling.
 
-```text
+---
+
+# 🚀 Tech Stack
+
+## Backend
+- FastAPI
+- SQLAlchemy
+- Alembic (Database Migration)
+- PostgreSQL
+- JWT Authentication
+- Clean Architecture (Router → Service → Repository)
+
+## Frontend
+- React + Vite + TypeScript
+- Axios
+- Protected Routes
+- Modular Component Structure
+
+## DevOps
+- Docker & Docker Compose
+- Environment-based configuration
+
+---
+
+# 📂 Project Structure
+
+```
 mini-dms/
-  backend/
-    app/
-      api/v1/routes/
-      core/
-      models/
-      repositories/
-      schemas/
-      services/
-      utils/
-    alembic/
-    scripts/
-    tests/
-    storage/
-  frontend/
-    src/
-      api/
-      components/
-      contexts/
-      layouts/
-      pages/
-      routes/
-      types/
-      utils/
-  docker-compose.yml
+ ├── backend/
+ │    ├── app/
+ │    │    ├── api/
+ │    │    ├── core/
+ │    │    ├── models/
+ │    │    ├── repositories/
+ │    │    ├── schemas/
+ │    │    ├── services/
+ │    │    └── main.py
+ │    ├── alembic/
+ │    ├── scripts/
+ │    ├── tests/
+ │    └── requirements.txt
+ │
+ ├── frontend/
+ │    ├── src/
+ │    │    ├── components/
+ │    │    ├── pages/
+ │    │    ├── layouts/
+ │    │    └── api/
+ │
+ ├── docs/
+ │    └── screenshots/
+ │
+ ├── docker-compose.yml
+ └── README.md
 ```
 
-## 2) API Endpoints
+---
 
-### Auth
-- `POST /api/v1/auth/register`
-- `POST /api/v1/auth/login`
-- `GET /api/v1/auth/me`
+# 🔐 Features
 
-### Documents
-- `GET /api/v1/documents` (pagination + search + filter)
-- `POST /api/v1/documents/upload`
-- `GET /api/v1/documents/{document_id}`
-- `GET /api/v1/documents/{document_id}/download` (JWT-protected)
-- `POST /api/v1/documents/{document_id}/replace-request`
-- `POST /api/v1/documents/{document_id}/delete-request`
+## Authentication
+- User registration
+- User login
+- JWT protected APIs
+- Role-based access control (USER, ADMIN)
 
-### Permission Requests (admin)
-- `GET /api/v1/permission-requests`
-- `POST /api/v1/permission-requests/{request_id}/review`
+## Document Management
+- Upload document
+- Search & filter documents
+- Pagination support
+- View document details
+- Replace document (versioning supported)
+- Delete document
+- Document status tracking:
+  - ACTIVE
+  - PENDING_DELETE
+  - PENDING_REPLACE
 
-### Notifications
-- `GET /api/v1/notifications`
-- `PATCH /api/v1/notifications/{notification_id}/read`
-- `PATCH /api/v1/notifications/read-all`
+## Permission Workflow
+- Replace/Delete requires admin approval
+- Document is locked during pending request
+- Admin can approve or reject request
+- Transaction-safe database operation
 
-## 3) Local Run Instructions
+## Notification System
+- Database-stored notifications
+- Mark as read
+- Role-based notifications
+- Workflow-triggered alerts
 
-## Prerequisites
-- Docker + Docker Compose
-- Python 3.11
-- Node.js 18+
+---
 
-## Start Postgres
-```bash
-cd /Users/ensonex/mini-dms
-docker compose up -d postgres
+# 🖥 UI Preview
+
+## Login
+![Login](docs/screenshots/login.jpeg)
+
+## Register
+![Register](docs/screenshots/register.jpeg)
+
+## Dashboard
+![Dashboard](docs/screenshots/dashboard.jpeg)
+
+## Documents
+![Documents](docs/screenshots/documents.jpeg)
+
+## Upload Document
+![Upload](docs/screenshots/uplouddoc.jpeg)
+
+## Replace / Delete Workflow
+![ReplaceDelete](docs/screenshots/replacedelete.jpeg)
+
+## Approval Page
+![Approvals](docs/screenshots/approvals.jpeg)
+
+## Notifications
+![Notifications](docs/screenshots/notifications.jpeg)
+
+---
+
+# ⚙️ How to Run
+
+## 1️⃣ Clone Repository
+
+```
+git clone https://github.com/sitisolehahyr/mini-dms.git
+cd mini-dms
 ```
 
-## Backend Setup
-```bash
-cd /Users/ensonex/mini-dms/backend
-cp .env.example .env
-python3.11 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-alembic upgrade head
-python scripts/seed_admin.py
-uvicorn app.main:app --reload --port 8000
+---
+
+## 2️⃣ Run with Docker
+
+```
+docker compose up --build
 ```
 
-Default seeded admin:
-- email: `admin@example.com`
-- password: `Admin123!`
+Backend:
+http://localhost:8000
 
-## Frontend Setup
-```bash
-cd /Users/ensonex/mini-dms/frontend
-cp .env.example .env
-npm install
-npm run dev
+Frontend:
+http://localhost:5173
+
+---
+
+## 3️⃣ Run Database Migration
+
+```
+docker compose exec backend alembic upgrade head
 ```
 
-Frontend URL:
-- `http://localhost:5173`
+---
 
-Backend URL:
-- `http://localhost:8000`
+## 4️⃣ Seed Admin User
 
-## 4) Tests
-
-Run backend tests:
-```bash
-cd /Users/ensonex/mini-dms/backend
-source .venv/bin/activate
-python -m pytest -q
+```
+docker compose exec backend python scripts/seed_admin.py
 ```
 
-Included key test coverage:
-- auth register/login/me
-- document listing with pagination + search + filter
-- replace/delete request flow
-- admin approve/reject flow
+Default admin credentials:
 
-## 5) Notes on Workflow & Safety
+- Email: admin@example.com  
+- Password: admin123
 
-- Replace/delete request sets document status to `PENDING_REPLACE` or `PENDING_DELETE`, and locks via `locked_by_request_id`.
-- Admin review runs with row-level locking (`FOR UPDATE`) for request + document.
-- Version conflict protection via `expected_version` checks to avoid stale updates.
-- Replace approval promotes pending file to active storage and bumps version atomically in DB transaction.
-- Delete approval removes the document transactionally and then cleans file on disk.
+---
 
-## 6) System Design Answers
+# 🧠 System Design Considerations
 
-### How to handle large file uploads?
-- Use chunked/multipart upload directly to object storage (S3/GCS) via pre-signed URLs.
-- Keep FastAPI as control plane (issue upload session + verify checksum), not data plane.
-- Add background workers for virus scan, OCR, metadata extraction.
+## 1. Handling Large File Uploads
+- Stream-based file handling to avoid memory overload
+- In production, object storage such as AWS S3 or MinIO should be used
+- Only metadata is stored in the database
 
-### How to avoid lost updates when replacing documents?
-- Require client to send `expected_version`.
-- Reject with conflict when DB version differs.
-- Use row lock on approval (`SELECT ... FOR UPDATE`) so only one reviewer mutation applies.
+## 2. Preventing Lost Updates
+- Document locking when status is PENDING_DELETE or PENDING_REPLACE
+- Version incrementing mechanism
+- Transaction-safe replace/delete operations using database transactions
 
-### How to design notifications for scalability?
-- Keep notification write model in DB table as source of truth.
-- Use outbox/event table and async consumers (Kafka/SQS/RabbitMQ) for fan-out (email/push/websocket).
-- Partition notifications by user/time and add cursor-based pagination for high volume.
+## 3. Scalable Notification System
+- Indexed notification table per user
+- Can be migrated to event-driven architecture
+- Future-ready for message queue integration (e.g., Kafka, RabbitMQ)
 
-### How to secure file access?
-- No public static file URLs for private docs.
-- JWT-authenticated download endpoint + authorization checks (owner/admin).
-- Validate path traversal, store opaque file IDs, and audit every file access.
+## 4. Secure File Access
+- JWT authentication middleware
+- Role-based route protection
+- Controlled file-serving endpoints
 
-### How to structure services for microservice migration?
-- Keep domain services (`auth`, `document`, `permission`, `notification`) with repository interfaces.
-- Use DTO contracts at API boundary and avoid framework leakage into domain logic.
-- Introduce async events (document_requested/reviewed) so modules can split into services later with minimal rewrites.
+## 5. Microservice Readiness
+- Clear separation between layers
+- Repository and service abstraction
+- Modular design allows separation into:
+  - Auth service
+  - Document service
+  - Notification service
+
+---
+
+# 🧪 Testing
+
+- Pytest for backend testing
+- Role-based access validation
+- Transaction integrity checks
+- Workflow approval testing
+
+---
+
+# ✨ Notes
+
+This project was built locally with focus on:
+
+- Clean architecture
+- Production-style workflow handling
+- Transaction safety
+- Maintainability and scalability
+- Clear separation of concerns
+
+---
+
+# 👩‍💻 Author
+
+Siti Solehah Yunita  
+Software Engineer
