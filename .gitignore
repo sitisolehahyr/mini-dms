@@ -1,22 +1,22 @@
 # Python
 __pycache__/
 *.py[cod]
-*.sqlite3
+*.pyd
 .venv/
+venv/
+.env
 .pytest_cache/
+.mypy_cache/
 
 # Node
 node_modules/
 dist/
-
-# Env
-.env
+build/
+*.log
 
 # OS
 .DS_Store
 
-# Storage
-backend/storage/documents/*
-backend/storage/pending/*
-!backend/storage/documents/.gitkeep
-!backend/storage/pending/.gitkeep
+# Local storage for uploads (keep folder via .gitkeep if needed)
+backend/storage/*
+!backend/storage/.gitkeep
